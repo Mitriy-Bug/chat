@@ -1,5 +1,3 @@
-import ChatAPI from "./api/ChatAPI";
-
 export default class Chat {
     constructor(container) {
         this.container = container;
@@ -110,7 +108,7 @@ export default class Chat {
                 this.userList.push(name);
 
             }
-            //this.updateUserlist(name)
+            this.updateUserlist(name)
         })
     }
     updateUserlist(name) {
