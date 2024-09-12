@@ -64,7 +64,8 @@
     font-size: 14px;
     color: red;
     text-align: center;
-    margin-top: 5px;
+    margin: 10px 0;
+    display: block;
 }
 
 .modal__footer {
@@ -95,14 +96,6 @@
     border-color: #58bf97;
     background-color: #58bf97;
 }
-
-
-
-
-
-
-
-
 
 
 .modal__form.active .modal__background,
