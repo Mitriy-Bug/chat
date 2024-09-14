@@ -1,8 +1,8 @@
 export default class Chat {
     constructor(container) {
         this.container = container;
-        this.websocket = new WebSocket("ws://server-chat-nxif.onrender.com:10000/ws");
-        this.rest = 'http://server-chat-nxif.onrender.com:10000/new-user';
+        this.websocket = new WebSocket("ws://server-chat-nxif.onrender.com/ws");
+        this.rest = 'http://server-chat-nxif.onrender.com/new-user';
         this.userList = [];
     }
 
