@@ -13,17 +13,17 @@ export default class Chat {
         else {
             this.bindToDOM();
             this.chatUserlist = document.querySelector(".chat__users");
-            console.log(this.chatUserlist);
-            this.userList.push(this.chatName);
+            this.form = this.container.querySelector(".form");
+            //this.userList.push(this.chatName);
             //this.registerUser(this.chatName);
-            //this.updateUserlist(this.chatName);
-            this.userListFromStorage(this.chatName);
+            this.updateUserlist(this.chatName);
+            //this.userListFromStorage(this.chatName);
             this.sendMessage(this.chatName);
             this.closingPage(this.chatName);
         }
     }
     createName() {
-        this.container.insertAdjacentHTML("afterbegin", `
+            this.container.insertAdjacentHTML("afterbegin", `
             <div class="modal__form active">
                 <div class="modal__background">
                     <div class="modal__content modal-text">
@@ -39,35 +39,35 @@ export default class Chat {
                     </div>
             </div>
             `);
-        const btnPsevdoname = document.querySelector(".btn-psevdoname");
-        const errorBlock = document.querySelector(".form__hint");
+            const btnPsevdoname = document.querySelector(".btn-psevdoname");
+            const errorBlock = document.querySelector(".form__hint");
 
-        if (btnPsevdoname) {
-            btnPsevdoname.addEventListener("click", (e) => {
-                const formName = document.querySelector(".form__name").value;
-                if (!formName) {
-                    errorBlock.innerHTML = "Пустой псевдоним недопустим";
-                    return;
-                } //проверка на пустоту
-                let data = JSON.stringify({name: formName})
-                fetch(this.rest, {
-                    method: 'post',
-                    body: data
-                }).then((response) => {
-                    if(response.status == 409) {
-                        errorBlock.innerHTML = 'Такой пользователь уже существует. Введите другой псевдоним';
-                        return false; //если пользователь уже существует
-                    } else if(response.status == 200) {
-                        errorBlock.innerHTML = '';
-                        this.container.innerHTML = '';
-                        window.localStorage.setItem('chatname', formName);
-                        this.registerUser(formName);
-                        this.bindToDOM();
-                        this.updateUserlist(formName);
-                    }
+            if (btnPsevdoname) {
+                btnPsevdoname.addEventListener("click", (e) => {
+                    const formName = document.querySelector(".form__name").value;
+                    if (!formName) {
+                        errorBlock.innerHTML = "Пустой псевдоним недопустим";
+                        return;
+                    } //проверка на пустоту
+                    let data = JSON.stringify({name: formName})
+                    fetch(this.rest, {
+                        method: 'post',
+                        body: data
+                    }).then((response) => {
+                        if(response.status === 409) {
+                            errorBlock.innerHTML = 'Такой пользователь уже существует. Введите другой псевдоним';
+                            return false; //если пользователь уже существует
+                        } else if(response.status === 200) {
+                            errorBlock.innerHTML = '';
+                            this.container.innerHTML = '';
+                            window.localStorage.setItem('chatname', formName);
+                            this.registerUser(formName);
+                            this.bindToDOM();
+                            this.updateUserlist(formName);
+                        }
+                    })
                 })
-            })
-        }
+            }
     }
     bindToDOM() {
         this.container.insertAdjacentHTML("afterbegin", `
@@ -104,64 +104,47 @@ export default class Chat {
             option: 'register'
         }))
     }
-    userListFromStorage(name) {
-        this.websocket.addEventListener("open", (e) => {
-            console.log(e);
-           if (this.chatUserList) {
-                //chatUserList.replaceChildren();
-                this.userList.push(name);
-
-            }
-            this.updateUserlist(name)
-        })
-    }
-    updateUserlist(name) {
+    // userListFromStorage(name) {
+    //     this.websocket.addEventListener("open", (e) => {
+    //         console.log(e);
+    //        if (this.chatUserList) {
+    //             //chatUserList.replaceChildren();
+    //             this.userList.push(name);
+    //            this.updateUserlist(name)
+    //         }
+    //
+    //     })
+    // }
+    updateUserlist(users) {
         this.websocket.addEventListener("message", (e) => {
-            console.log(this.userList);
-            let data = JSON.parse(e.data)
-            //console.log(data.option);
-            //console.log(e);
-            if (data) {
-            if (data.option === undefined) {
-                if (this.chatUserlist) {
-                    //chatUserlist.replaceChildren();
-                    let nameUser = name;
-                    data.forEach(user => {
-                        // if (user.name === name) {
-                        //     nameUser = 'YOU';
-                        // }
+            //let data = JSON.parse(e.data)
+            if(users){
+            if(this.chatUserlist){
+                this.chatUserlist.replaceChildren();
+            }
+            if(typeof users === 'object') {
+                users.forEach(user => {
+                    if (user.name) {
                         let newUser = document.createElement("div");
                         newUser.classList.add("chat__user");
                         newUser.innerHTML = user.name;
                         this.chatUserlist.insertAdjacentElement('beforeEnd', newUser);
-                    })
-                }
-            }
-            if (data.option === 'register') {
-                //this.userList.push(data.name);
-                if (this.chatUserlist) {
-                    this.chatUserlist.replaceChildren();
-                    this.userList.forEach(user => {
-                        let newUser = document.createElement("div");
-                        newUser.classList.add("chat__user");
-                        newUser.innerHTML = user;
-                        this.chatUserlist.insertAdjacentElement('beforeEnd', newUser);
-                    })
-                }
+                    }
+                })
             }
         }
         })
     }
     sendMessage(name) {
-        let form = this.container.querySelector(".form");
-        if (form) {
-            form.addEventListener("submit", (e) => {
+
+        if (this.form) {
+            this.form.addEventListener("submit", (e) => {
                 e.preventDefault();
                 let message = document.querySelector(".message__input");
                 if (!message.value) {
                     return false;
                 }
-                console.log(message);
+
                 this.websocket.send(JSON.stringify({
                     name,
                     type: 'send',
@@ -173,7 +156,12 @@ export default class Chat {
         }
         this.websocket.addEventListener("message", (e) => {
             let data = JSON.parse(e.data)
-//            console.log(data);
+
+            if (data.type === undefined) {
+                this.updateUserlist(data);
+
+            }
+
             if (data.option === 'message') {
                 let yourMessage = 'message__container-interlocutor';
                 let yourName = data.name;
@@ -195,56 +183,23 @@ export default class Chat {
                     );
                 }
             }
-            if (data.option === 'exit') {
-                let data = JSON.parse(e.data)
-                let yourMessage = 'message__container-interlocutor';
-                let yourName = data.name;
-                if (data.name === name) {
-                    yourMessage = 'message__container-yourself';
-                    yourName = 'YOU';
-                }
-                const chatMessagesContainer = document.querySelector(".chat__messages-container");
-
-                if (chatMessagesContainer) {
-                    chatMessagesContainer.insertAdjacentHTML(
-                        'beforeEnd',
-                        `
-                             <div class="message__container ${yourMessage}">
-                               <div class="message__header">${yourName}</div>
-                               <div class="">${data.message}</div>
-                             </div>
-                             `
-                    );
-                }
-            }
-
-    })
+     })
     }
     closingPage(name) {
-        document.addEventListener("visibilitychange", () => {
-            //console.log(this.chatName);
-            if (document.hidden) {
-                //console.log('вышел - '+this.chatName);
+        window.addEventListener("unload", (e) => {
                 this.websocket.send(
                     JSON.stringify({
-                        message: 'Я вышел из чата',
-                        option: 'exit',
-                        type: 'send',
-                        name: this.chatName
+                        type: 'exit',
+                        user: name
                     })
                 );
-            } else {
-               // console.log('пришел - '+this.chatName);
-                this.websocket.send(
-                    JSON.stringify({
-                        message: 'А вот и нет, я вернулся :)',
-                        option: 'exit',
-                        type: 'send',
-                        name: this.chatName
-                    })
-                );
-            }
+            window.localStorage.clear();
+            if(this.chatUserlist){
+                this.chatUserlist.forEach(user => {
 
+                })
+            }
+            //this.updateUserlist(name);
         });
     }
 }
