@@ -5,18 +5,21 @@ export default class Chat {
         this.rest = 'https://server-chat-nxif.onrender.com/new-user';
         this.userList = [];
     }
-
     init() {
-
         this.chatName = window.localStorage.getItem('chatname');
         if(!this.chatName){
             this.createName();
         }
         else {
-            this.userListFromStorage(this.chatName);
             this.bindToDOM();
-            this.updateUserlist(this.chatName);
+            this.chatUserlist = document.querySelector(".chat__users");
+            console.log(this.chatUserlist);
+            this.userList.push(this.chatName);
+            //this.registerUser(this.chatName);
+            //this.updateUserlist(this.chatName);
+            this.userListFromStorage(this.chatName);
             this.sendMessage(this.chatName);
+            this.closingPage(this.chatName);
         }
     }
     createName() {
@@ -94,16 +97,17 @@ export default class Chat {
     }
 
     registerUser(name) {
+        console.log(name);
         this.websocket.send(JSON.stringify({
-            name,
+            name: name,
             type: 'send',
             option: 'register'
         }))
     }
     userListFromStorage(name) {
         this.websocket.addEventListener("open", (e) => {
-            let chatUserList = document.querySelector(".chat__users");
-            if (chatUserList) {
+            console.log(e);
+           if (this.chatUserList) {
                 //chatUserList.replaceChildren();
                 this.userList.push(name);
 
@@ -113,12 +117,14 @@ export default class Chat {
     }
     updateUserlist(name) {
         this.websocket.addEventListener("message", (e) => {
+            console.log(this.userList);
             let data = JSON.parse(e.data)
-            let chatUserlist = document.querySelector(".chat__users");
-console.log(data.option);
-            if (data.option === undefined){
-                if (chatUserlist) {
-                    chatUserlist.replaceChildren();
+            //console.log(data.option);
+            //console.log(e);
+            if (data) {
+            if (data.option === undefined) {
+                if (this.chatUserlist) {
+                    //chatUserlist.replaceChildren();
                     let nameUser = name;
                     data.forEach(user => {
                         // if (user.name === name) {
@@ -127,43 +133,23 @@ console.log(data.option);
                         let newUser = document.createElement("div");
                         newUser.classList.add("chat__user");
                         newUser.innerHTML = user.name;
-                        chatUserlist.insertAdjacentElement('beforeEnd', newUser);
+                        this.chatUserlist.insertAdjacentElement('beforeEnd', newUser);
                     })
                 }
             }
-                if (data.option === 'register') {
-                    this.userList.push(data.name);
-                    if (chatUserlist) {
-                        chatUserlist.replaceChildren();
-                        this.userList.forEach(user => {
-                            let newUser = document.createElement("div");
-                            newUser.classList.add("chat__user");
-                            newUser.innerHTML = user;
-                            chatUserlist.insertAdjacentElement('beforeEnd', newUser);
-                        })
-                    }
+            if (data.option === 'register') {
+                //this.userList.push(data.name);
+                if (this.chatUserlist) {
+                    this.chatUserlist.replaceChildren();
+                    this.userList.forEach(user => {
+                        let newUser = document.createElement("div");
+                        newUser.classList.add("chat__user");
+                        newUser.innerHTML = user;
+                        this.chatUserlist.insertAdjacentElement('beforeEnd', newUser);
+                    })
                 }
-                //if (data.option === 'message') {
-                    // let yourMessage = 'message__container-interlocutor';
-                    // let yourName = data.name;
-                    // if (data.name === name){
-                    //     yourMessage = 'message__container-yourself';
-                    //     yourName = 'YOU';
-                    // }
-                    // const chatMessagesContainer = document.querySelector(".chat__messages-container");
-                    //
-                    // if (chatMessagesContainer) {
-                    //     chatMessagesContainer.insertAdjacentHTML(
-                    //         'beforeEnd',
-                    //         `
-                    //             <div class="message__container ${yourMessage}">
-                    //                     <div class="message__header">${yourName}</div>
-                    //                     <div class="">${data.message}</div>
-                    //                 </div>
-                    //             `
-                    //     );
-                    // }
-               // }
+            }
+        }
         })
     }
     sendMessage(name) {
@@ -187,29 +173,78 @@ console.log(data.option);
         }
         this.websocket.addEventListener("message", (e) => {
             let data = JSON.parse(e.data)
-            console.log(data.option);
+//            console.log(data);
             if (data.option === 'message') {
-            let yourMessage = 'message__container-interlocutor';
-            let yourName = data.name;
-            if (data.name === name) {
-                yourMessage = 'message__container-yourself';
-                yourName = 'YOU';
-            }
-            const chatMessagesContainer = document.querySelector(".chat__messages-container");
+                let yourMessage = 'message__container-interlocutor';
+                let yourName = data.name;
+                if (data.name === name) {
+                    yourMessage = 'message__container-yourself';
+                    yourName = 'YOU';
+                }
+                const chatMessagesContainer = document.querySelector(".chat__messages-container");
 
-            if (chatMessagesContainer) {
-                chatMessagesContainer.insertAdjacentHTML(
-                    'beforeEnd',
-                    `
-                                        <div class="message__container ${yourMessage}">
-                                                <div class="message__header">${yourName}</div>
-                                                <div class="">${data.message}</div>
-                                            </div>
-                                        `
-                );
+                if (chatMessagesContainer) {
+                    chatMessagesContainer.insertAdjacentHTML(
+                        'beforeEnd',
+                        `
+                             <div class="message__container ${yourMessage}">
+                               <div class="message__header">${yourName}</div>
+                               <div class="">${data.message}</div>
+                             </div>
+                             `
+                    );
+                }
             }
-        }
+            if (data.option === 'exit') {
+                let data = JSON.parse(e.data)
+                let yourMessage = 'message__container-interlocutor';
+                let yourName = data.name;
+                if (data.name === name) {
+                    yourMessage = 'message__container-yourself';
+                    yourName = 'YOU';
+                }
+                const chatMessagesContainer = document.querySelector(".chat__messages-container");
+
+                if (chatMessagesContainer) {
+                    chatMessagesContainer.insertAdjacentHTML(
+                        'beforeEnd',
+                        `
+                             <div class="message__container ${yourMessage}">
+                               <div class="message__header">${yourName}</div>
+                               <div class="">${data.message}</div>
+                             </div>
+                             `
+                    );
+                }
+            }
+
     })
     }
+    closingPage(name) {
+        document.addEventListener("visibilitychange", () => {
+            //console.log(this.chatName);
+            if (document.hidden) {
+                //console.log('вышел - '+this.chatName);
+                this.websocket.send(
+                    JSON.stringify({
+                        message: 'Я вышел из чата',
+                        option: 'exit',
+                        type: 'send',
+                        name: this.chatName
+                    })
+                );
+            } else {
+               // console.log('пришел - '+this.chatName);
+                this.websocket.send(
+                    JSON.stringify({
+                        message: 'А вот и нет, я вернулся :)',
+                        option: 'exit',
+                        type: 'send',
+                        name: this.chatName
+                    })
+                );
+            }
 
+        });
+    }
 }
