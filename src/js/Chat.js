@@ -7,6 +7,7 @@ export default class Chat {
     }
     init() {
         this.chatName = window.localStorage.getItem('chatname');
+
         if(!this.chatName){
             this.createName();
         }
@@ -15,12 +16,14 @@ export default class Chat {
             this.chatUserlist = document.querySelector(".chat__users");
             this.form = this.container.querySelector(".form");
 
-            if(this.userList.indexOf(this.chatName) === -1) {
-                this.userList.push(this.chatName);
-            }
+            // if(this.userList.indexOf(this.chatName) === -1) {
+            //     this.userList.push(this.chatName);
+            // }
             //this.registerUser(this.chatName);
             //this.updateUserlist(this.chatName);
+            this.updateUserlist([{name:this.chatName}])
             //this.userListFromStorage(this.chatName);
+            this.sendForm(this.chatName)
             this.sendMessage(this.chatName);
             this.closingPage(this.chatName);
         }
@@ -137,38 +140,41 @@ export default class Chat {
                 }
             }
     }
-    sendMessage(name) {
-        if (this.form) {
-            //console.log(this.form);
+    sendForm(name) {
+        //if (this.form) {
+            let message = document.querySelector(".message__input");
             this.form.addEventListener("submit", (e) => {
                 e.preventDefault();
-                let message = document.querySelector(".message__input");
+                console.log(message.value);
                 if (!message.value) {
                     return false;
                 }
-
-                this.websocket.send(JSON.stringify({
-                    name,
-                    type: 'send',
-                    option: 'message',
-                    message: message.value
-                }))
-                message.value = '';
+                if(this.websocket.readyState === 1) {
+                    this.websocket.send(JSON.stringify({
+                        name,
+                        type: 'send',
+                        option: 'message',
+                        message: message.value
+                    }))
+                    message.value = '';
+                }
             })
-        }
+      //  }
+    }
+    sendMessage(name) {
         this.websocket.addEventListener("message", (e) => {
 
             let data = JSON.parse(e.data)
             //console.log(this.userList);
-            //console.log(data);
-            console.log(data.name);
+            console.log(data);
+            //console.log(data.name);
             //this.updateUserlist([{name:data.name}])
-            if(this.userList.indexOf(data.name) === -1) {
-                //this.userList.push(data.name);
-                this.updateUserlist([{name:data.name}])
-            }
+            // if(this.userList.indexOf(data.name) === -1) {
+            //     //this.userList.push(data.name);
+            //     this.updateUserlist([{name:data.name}])
+            // }
             if (data.type === undefined) {
-                console.log(data);
+                //console.log(data);
                //this.updateUserlist(data);
                 //this.chatUserlist = document.querySelector(".chat__users");
                 //        if (this.chatUserlist) {
