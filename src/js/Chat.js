@@ -110,11 +110,15 @@ export default class Chat {
 
     registerUser(name) {
         //console.log(name);
-        this.websocket.send(JSON.stringify({
-            name: name,
-            type: 'send',
-            option: 'register'
-        }))
+        if(this.websocket.readyState === 1) {
+            this.websocket.send(JSON.stringify({
+                name: name,
+                type: 'send',
+                option: 'register'
+            }))
+        } else {
+            console.log('Соединение не установлено');
+        }
         if(this.userList.indexOf(name) === -1) {
             this.userList.push(name);
         }
@@ -157,6 +161,8 @@ export default class Chat {
                         message: message.value
                     }))
                     message.value = '';
+                } else {
+                    console.log('Соединение не установлено');
                 }
             })
       //  }
