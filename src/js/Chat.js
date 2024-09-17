@@ -14,9 +14,12 @@ export default class Chat {
             this.bindToDOM();
             this.chatUserlist = document.querySelector(".chat__users");
             this.form = this.container.querySelector(".form");
-            //this.userList.push(this.chatName);
+
+            if(this.userList.indexOf(this.chatName) === -1) {
+                this.userList.push(this.chatName);
+            }
             //this.registerUser(this.chatName);
-            this.updateUserlist(this.chatName);
+            //this.updateUserlist(this.chatName);
             //this.userListFromStorage(this.chatName);
             this.sendMessage(this.chatName);
             this.closingPage(this.chatName);
@@ -61,9 +64,15 @@ export default class Chat {
                             errorBlock.innerHTML = '';
                             this.container.innerHTML = '';
                             window.localStorage.setItem('chatname', formName);
-                            this.registerUser(formName);
                             this.bindToDOM();
-                            this.updateUserlist(formName);
+                            this.chatUserlist = document.querySelector(".chat__users");
+
+                            if(this.userList.indexOf(formName) === -1) {
+                                this.userList.push(formName);
+                            }
+                            this.registerUser(formName);
+                            this.sendMessage(formName);
+                            this.closingPage(formName);
                         }
                     })
                 })
@@ -97,47 +106,40 @@ export default class Chat {
     }
 
     registerUser(name) {
-        console.log(name);
+        //console.log(name);
         this.websocket.send(JSON.stringify({
             name: name,
             type: 'send',
             option: 'register'
         }))
-    }
-    // userListFromStorage(name) {
-    //     this.websocket.addEventListener("open", (e) => {
-    //         console.log(e);
-    //        if (this.chatUserList) {
-    //             //chatUserList.replaceChildren();
-    //             this.userList.push(name);
-    //            this.updateUserlist(name)
-    //         }
-    //
-    //     })
-    // }
-    updateUserlist(users) {
-        this.websocket.addEventListener("message", (e) => {
-            //let data = JSON.parse(e.data)
-            if(users){
-            if(this.chatUserlist){
-                this.chatUserlist.replaceChildren();
-            }
-            if(typeof users === 'object') {
-                users.forEach(user => {
-                    if (user.name) {
-                        let newUser = document.createElement("div");
-                        newUser.classList.add("chat__user");
-                        newUser.innerHTML = user.name;
-                        this.chatUserlist.insertAdjacentElement('beforeEnd', newUser);
-                    }
-                })
-            }
+        if(this.userList.indexOf(name) === -1) {
+            this.userList.push(name);
         }
-        })
+    }
+
+    updateUserlist(users) {
+            if(users){
+                if(this.chatUserlist){
+                  //this.chatUserlist.replaceChildren();
+                        users.forEach(user => {
+                            if (user.name) {
+                                let newUser = document.createElement("div");
+                                newUser.classList.add("chat__user");
+                                newUser.innerHTML = user.name;
+                                this.chatUserlist.insertAdjacentElement('beforeEnd', newUser);
+
+                                if(this.userList.indexOf(user.name) === -1) {
+                                    this.userList.push(user.name);
+                                }
+
+                            }
+                        })
+                }
+            }
     }
     sendMessage(name) {
-
         if (this.form) {
+            //console.log(this.form);
             this.form.addEventListener("submit", (e) => {
                 e.preventDefault();
                 let message = document.querySelector(".message__input");
@@ -155,11 +157,26 @@ export default class Chat {
             })
         }
         this.websocket.addEventListener("message", (e) => {
+
             let data = JSON.parse(e.data)
-
+            //console.log(this.userList);
+            //console.log(data);
+            console.log(data.name);
+            //this.updateUserlist([{name:data.name}])
+            if(this.userList.indexOf(data.name) === -1) {
+                //this.userList.push(data.name);
+                this.updateUserlist([{name:data.name}])
+            }
             if (data.type === undefined) {
-                this.updateUserlist(data);
-
+                console.log(data);
+               //this.updateUserlist(data);
+                //this.chatUserlist = document.querySelector(".chat__users");
+                //        if (this.chatUserlist) {
+                //            //this.chatUserlist.replaceChildren();
+                //             //this.userList.push(name);
+                //            console.log([{name:data.name}]);
+                //            this.updateUserlist([{name:data.name}])
+                //         }
             }
 
             if (data.option === 'message') {
@@ -182,6 +199,24 @@ export default class Chat {
                              `
                     );
                 }
+
+                if(this.userList.indexOf(data.name) === -1) {
+                    this.userList.push(data.name);
+                }
+            }
+            if (data.option === 'register') {
+                console.log(data);
+
+                if(this.userList.indexOf(data.name) === -1) {
+                    this.userList.push(data.name);
+                }
+
+                if (data.name) {
+                    let newUser = document.createElement("div");
+                    newUser.classList.add("chat__user");
+                    newUser.innerHTML = data.name;
+                    this.chatUserlist.insertAdjacentElement('beforeEnd', newUser);
+                }
             }
      })
     }
@@ -193,12 +228,12 @@ export default class Chat {
                         user: name
                     })
                 );
-            window.localStorage.clear();
-            if(this.chatUserlist){
-                this.chatUserlist.forEach(user => {
-
-                })
-            }
+            //window.localStorage.clear();
+            // if(this.chatUserlist){
+            //     this.chatUserlist.forEach(user => {
+            //
+            //     })
+            // }
             //this.updateUserlist(name);
         });
     }
