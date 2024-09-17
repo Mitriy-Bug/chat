@@ -211,10 +211,10 @@ export default class Chat {
                              `
                     );
                 }
-
-                if(this.userList.indexOf(data.name) === -1) {
-                    this.userList.push(data.name);
-                }
+                this.updateUserlist([{name:data.name}])
+                // if(this.userList.indexOf(data.name) === -1) {
+                //     this.userList.push(data.name);
+                // }
             }
             if (data.option === 'register') {
                 console.log(data);
