@@ -146,6 +146,9 @@ h1 {
     background-color: #e0e6da;
     box-sizing: border-box;
 }
+.chat__user.active{
+    background-color: #9ad066;
+}
 .message__container {
     width: 50%;
     margin-bottom: 10px;

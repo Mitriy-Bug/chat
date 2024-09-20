@@ -6,30 +6,10 @@ export default class Chat {
         this.userList = [];
     }
     init() {
-        this.chatName = window.localStorage.getItem('chatname');
-
-        if(!this.chatName){
-            this.createName();
-        }
-        else {
-            this.bindToDOM();
-            this.chatUserlist = document.querySelector(".chat__users");
-            this.form = this.container.querySelector(".form");
-
-            // if(this.userList.indexOf(this.chatName) === -1) {
-            //     this.userList.push(this.chatName);
-            // }
-            //this.registerUser(this.chatName);
-            //this.updateUserlist(this.chatName);
-            this.updateUserlist([{name:this.chatName}])
-            //this.userListFromStorage(this.chatName);
-            this.sendForm(this.chatName)
-            this.sendMessage(this.chatName);
-            this.closingPage(this.chatName);
-        }
+        this.createName();
     }
-    createName() {
-            this.container.insertAdjacentHTML("afterbegin", `
+    createForm() {
+        this.container.insertAdjacentHTML("afterbegin", `
             <div class="modal__form active">
                 <div class="modal__background">
                     <div class="modal__content modal-text">
@@ -45,6 +25,9 @@ export default class Chat {
                     </div>
             </div>
             `);
+    }
+    createName() {
+            this.createForm();
             const btnPsevdoname = document.querySelector(".btn-psevdoname");
             const errorBlock = document.querySelector(".form__hint");
 
@@ -59,25 +42,28 @@ export default class Chat {
                     fetch(this.rest, {
                         method: 'post',
                         body: data
-                    }).then((response) => {
-                        if(response.status === 409) {
-                            errorBlock.innerHTML = 'Такой пользователь уже существует. Введите другой псевдоним';
-                            return false; //если пользователь уже существует
-                        } else if(response.status === 200) {
-                            errorBlock.innerHTML = '';
-                            this.container.innerHTML = '';
-                            window.localStorage.setItem('chatname', formName);
-                            this.bindToDOM();
-                            this.chatUserlist = document.querySelector(".chat__users");
-
-                            if(this.userList.indexOf(formName) === -1) {
-                                this.userList.push(formName);
-                            }
-                            this.registerUser(formName);
-                            this.sendMessage(formName);
-                            this.closingPage(formName);
-                        }
                     })
+                        .then((response) => {
+                            if (response.status === 409) {
+                                errorBlock.innerHTML = 'Такой пользователь уже существует. Введите другой псевдоним';
+                                return false; //если пользователь уже существует
+                            } else if (response.status === 200) {
+                                this.logged = true;
+                                errorBlock.innerHTML = '';
+                                this.container.innerHTML = '';
+
+                                this.bindToDOM();
+                                this.sendForm(formName)
+                                this.chatUserlist = document.querySelector(".chat__users");
+
+                                // if (this.userList.indexOf(formName) === -1) {
+                                //     this.userList.push(formName);
+                                // }
+                                this.registerUser(formName);
+                                this.sendMessage(formName);
+                                this.closingPage(formName);
+                            }
+                        })
                 })
             }
     }
@@ -106,6 +92,7 @@ export default class Chat {
                </div>
             </div>
         `);
+        this.form = this.container.querySelector(".form");
     }
 
     registerUser(name) {
@@ -123,33 +110,29 @@ export default class Chat {
             this.userList.push(name);
         }
     }
-
     updateUserlist(users) {
+        // console.log(this.userList);
+        // console.log(users);
             if(users){
                 if(this.chatUserlist){
-                  //this.chatUserlist.replaceChildren();
                         users.forEach(user => {
                             if (user.name) {
-                                let newUser = document.createElement("div");
-                                newUser.classList.add("chat__user");
-                                newUser.innerHTML = user.name;
-                                this.chatUserlist.insertAdjacentElement('beforeEnd', newUser);
-
                                 if(this.userList.indexOf(user.name) === -1) {
                                     this.userList.push(user.name);
+                                    let newUser = document.createElement("div");
+                                    newUser.classList.add("chat__user");
+                                    newUser.innerHTML = user.name;
+                                    this.chatUserlist.insertAdjacentElement('beforeEnd', newUser);
                                 }
-
                             }
                         })
                 }
             }
     }
     sendForm(name) {
-        //if (this.form) {
             let message = document.querySelector(".message__input");
             this.form.addEventListener("submit", (e) => {
                 e.preventDefault();
-                console.log(message.value);
                 if (!message.value) {
                     return false;
                 }
@@ -165,31 +148,11 @@ export default class Chat {
                     console.log('Соединение не установлено');
                 }
             })
-      //  }
     }
     sendMessage(name) {
         this.websocket.addEventListener("message", (e) => {
 
             let data = JSON.parse(e.data)
-            //console.log(this.userList);
-            console.log(data);
-            //console.log(data.name);
-            //this.updateUserlist([{name:data.name}])
-            // if(this.userList.indexOf(data.name) === -1) {
-            //     //this.userList.push(data.name);
-            //     this.updateUserlist([{name:data.name}])
-            // }
-            if (data.type === undefined) {
-                //console.log(data);
-               //this.updateUserlist(data);
-                //this.chatUserlist = document.querySelector(".chat__users");
-                //        if (this.chatUserlist) {
-                //            //this.chatUserlist.replaceChildren();
-                //             //this.userList.push(name);
-                //            console.log([{name:data.name}]);
-                //            this.updateUserlist([{name:data.name}])
-                //         }
-            }
 
             if (data.option === 'message') {
                 let yourMessage = 'message__container-interlocutor';
@@ -212,17 +175,9 @@ export default class Chat {
                     );
                 }
                 this.updateUserlist([{name:data.name}])
-                // if(this.userList.indexOf(data.name) === -1) {
-                //     this.userList.push(data.name);
-                // }
+
             }
             if (data.option === 'register') {
-                console.log(data);
-
-                if(this.userList.indexOf(data.name) === -1) {
-                    this.userList.push(data.name);
-                }
-
                 if (data.name) {
                     let newUser = document.createElement("div");
                     newUser.classList.add("chat__user");
@@ -240,13 +195,6 @@ export default class Chat {
                         user: name
                     })
                 );
-            //window.localStorage.clear();
-            // if(this.chatUserlist){
-            //     this.chatUserlist.forEach(user => {
-            //
-            //     })
-            // }
-            //this.updateUserlist(name);
         });
     }
 }
