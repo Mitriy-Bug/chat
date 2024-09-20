@@ -30,7 +30,6 @@ export default class Chat {
             this.createForm();
             const btnPsevdoname = document.querySelector(".btn-psevdoname");
             const errorBlock = document.querySelector(".form__hint");
-
             if (btnPsevdoname) {
                 btnPsevdoname.addEventListener("click", (e) => {
                     const formName = document.querySelector(".form__name").value;
@@ -48,17 +47,11 @@ export default class Chat {
                                 errorBlock.innerHTML = 'Такой пользователь уже существует. Введите другой псевдоним';
                                 return false; //если пользователь уже существует
                             } else if (response.status === 200) {
-                                this.logged = true;
                                 errorBlock.innerHTML = '';
                                 this.container.innerHTML = '';
-
                                 this.bindToDOM();
                                 this.sendForm(formName)
                                 this.chatUserlist = document.querySelector(".chat__users");
-
-                                // if (this.userList.indexOf(formName) === -1) {
-                                //     this.userList.push(formName);
-                                // }
                                 this.registerUser(formName);
                                 this.sendMessage(formName);
                                 this.closingPage(formName);
@@ -103,31 +96,36 @@ export default class Chat {
                 type: 'send',
                 option: 'register'
             }))
+            if(this.userList.indexOf(name) === -1) {
+                this.userList.push(name);
+            }
         } else {
             console.log('Соединение не установлено');
         }
-        if(this.userList.indexOf(name) === -1) {
-            this.userList.push(name);
-        }
     }
-    updateUserlist(users) {
-        // console.log(this.userList);
-        // console.log(users);
-            if(users){
-                if(this.chatUserlist){
-                        users.forEach(user => {
-                            if (user.name) {
-                                if(this.userList.indexOf(user.name) === -1) {
-                                    this.userList.push(user.name);
-                                    let newUser = document.createElement("div");
-                                    newUser.classList.add("chat__user");
-                                    newUser.innerHTML = user.name;
-                                    this.chatUserlist.insertAdjacentElement('beforeEnd', newUser);
-                                }
-                            }
-                        })
+    updateUserlist(user) {
+        if (user) {
+            this.allUserlist = this.chatUserlist.querySelectorAll(".chat__user");
+            let test = false;
+            this.allUserlist.forEach(login => {
+                if (login.innerHTML === user) {
+                    test = true;
+                }
+            })
+            if(test === false){
+                let newUser = document.createElement("div");
+                newUser.classList.add("chat__user");
+                newUser.innerHTML = user;
+                this.chatUserlist.insertAdjacentElement('beforeEnd', newUser);
+            }
+            if (this.userList) {
+                if (this.userList.indexOf(user) === -1) {
+                    this.userList.push(user);
+                } else {
+                    console.log('Не могу добавить пользователя');
                 }
             }
+        }
     }
     sendForm(name) {
             let message = document.querySelector(".message__input");
@@ -151,9 +149,7 @@ export default class Chat {
     }
     sendMessage(name) {
         this.websocket.addEventListener("message", (e) => {
-
             let data = JSON.parse(e.data)
-
             if (data.option === 'message') {
                 let yourMessage = 'message__container-interlocutor';
                 let yourName = data.name;
@@ -162,7 +158,6 @@ export default class Chat {
                     yourName = 'YOU';
                 }
                 const chatMessagesContainer = document.querySelector(".chat__messages-container");
-
                 if (chatMessagesContainer) {
                     chatMessagesContainer.insertAdjacentHTML(
                         'beforeEnd',
@@ -174,8 +169,7 @@ export default class Chat {
                              `
                     );
                 }
-                this.updateUserlist([{name:data.name}])
-
+                this.updateUserlist(data.name)
             }
             if (data.option === 'register') {
                 if (data.name) {
@@ -183,6 +177,7 @@ export default class Chat {
                     newUser.classList.add("chat__user");
                     newUser.innerHTML = data.name;
                     this.chatUserlist.insertAdjacentElement('beforeEnd', newUser);
+                    this.updateUserlist(data.name)
                 }
             }
      })
